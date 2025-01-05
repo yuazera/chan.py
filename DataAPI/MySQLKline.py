@@ -1,5 +1,5 @@
 import pymysql
-from Common.CEnum import AUTYPE, KL_TYPE
+from Common.CEnum import AUTYPE, KL_TYPE, DATA_FIELD
 from Common.CTime import CTime
 from DataAPI.CommonStockAPI import CCommonStockApi
 from KLine.KLine_Unit import CKLine_Unit
@@ -50,24 +50,29 @@ class CMySQLKline(CCommonStockApi):
                      WHERE {where_str}
                      ORDER BY trade_date"""
             
+            print(f"Executing SQL: {sql} with params: {params}")  # 添加调试信息
             cursor.execute(sql, params)
-            for row in cursor.fetchall():
+            rows = cursor.fetchall()
+            print(f"Found {len(rows)} rows of data")  # 添加调试信息
+            
+            for row in rows:
                 # 解析日期并创建CTime对象
                 date_str = str(row[0])
                 year = int(date_str[:4])
                 month = int(date_str[5:7])
                 day = int(date_str[8:10])
                 
-                yield CKLine_Unit({
-                    'time': CTime(year, month, day, 0, 0),
-                    'open': float(row[1]),
-                    'high': float(row[2]),
-                    'low': float(row[3]),
-                    'close': float(row[4]),
-                    'volume': float(row[5]),
-                    'turnover': float(row[6]),
-                    'turnrate': float(row[7] or 0)
+                kline = CKLine_Unit({
+                    DATA_FIELD.FIELD_TIME: CTime(year, month, day, 0, 0, auto=False),  # 添加auto=False
+                    DATA_FIELD.FIELD_OPEN: float(row[1]),
+                    DATA_FIELD.FIELD_HIGH: float(row[2]),
+                    DATA_FIELD.FIELD_LOW: float(row[3]),
+                    DATA_FIELD.FIELD_CLOSE: float(row[4]),
+                    DATA_FIELD.FIELD_VOLUME: float(row[5]),
+                    DATA_FIELD.FIELD_TURNOVER: float(row[6]),
+                    DATA_FIELD.FIELD_TURNRATE: float(row[7] or 0)
                 })
+                yield kline
         finally:
             cursor.close()
             conn.close()
