@@ -11,7 +11,7 @@ if __name__ == "__main__":
     从而避免了在trigger_load入参那里进行K线对齐，自己去找出最大级别那根K线下所有次级别的K线
     """
     code = "sz.000001"
-    begin_time = "2023-06-01"
+    begin_time = "2024-12-01"
     end_time = None
     data_src = DATA_SRC.BAO_STOCK
     lv_list = [KL_TYPE.K_DAY, KL_TYPE.K_30M]
