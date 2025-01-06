@@ -1,5 +1,6 @@
 import pymysql
 from cbsp import CBuyPointSignal
+import argparse
 
 def verify_and_create_tables(level):
     """验证和创建特定级别的表"""
@@ -38,27 +39,28 @@ def verify_and_create_tables(level):
         conn.close()
 
 def main():
+    # 添加命令行参数解析
+    parser = argparse.ArgumentParser(description='计算不同级别的买卖点信号')
+    parser.add_argument('--levels', nargs='+', default=['w', 'd', '30'],
+                       help='要处理的级别，可以是 w(周线)、d(日线)、30(30分钟) 中的一个或多个')
+    args = parser.parse_args()
+
+    # 验证级别参数
+    valid_levels = {'w', 'd', '30'}
+    input_levels = set(args.levels)
+    if not input_levels.issubset(valid_levels):
+        invalid_levels = input_levels - valid_levels
+        print(f"错误：无效的级别参数 {invalid_levels}")
+        print(f"有效的级别参数为: {valid_levels}")
+        return
+
     try:
-        # 周线级别
-        if verify_and_create_tables('w'):
-            print("开始计算周线级别买卖点...")
-            cbsp_week = CBuyPointSignal(level='w')
-            cbsp_week.calculate_signals()
-            print("周线级别买卖点计算完成")
-
-        # 日线级别
-        if verify_and_create_tables('d'):
-            print("开始计算日线级别买卖点...")
-            cbsp_day = CBuyPointSignal(level='d')
-            cbsp_day.calculate_signals()
-            print("日线级别买卖点计算完成")
-
-        # 30分钟级别
-        if verify_and_create_tables('30'):
-            print("开始计算30分钟级别买卖点...")
-            cbsp_30m = CBuyPointSignal(level='30')
-            cbsp_30m.calculate_signals()
-            print("30分钟级别买卖点计算完成")
+        for level in args.levels:
+            if verify_and_create_tables(level):
+                print(f"开始计算{level}级别买卖点...")
+                cbsp = CBuyPointSignal(level=level)
+                cbsp.calculate_signals()
+                print(f"{level}级别买卖点计算完成")
 
     except Exception as e:
         print(f"计算买卖点时发生错误: {str(e)}")
